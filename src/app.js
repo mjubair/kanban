@@ -149,6 +149,8 @@ class App {
         const originColId = e.dataTransfer.getData("colId");
         const destinationColId = e.currentTarget.dataset.colId;
 
+        if (originColId === destinationColId) return;
+
         this.moveTask(taskId, originColId, destinationColId);
       });
     });

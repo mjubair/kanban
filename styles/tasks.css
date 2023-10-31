@@ -1,0 +1,39 @@
+.task {
+    padding-block: 8px 12px;
+    padding-inline: 12px;
+    box-shadow: rgba(140, 149, 159, 0.15) 0px 3px 6px;
+      border: 1px solid rgb(216, 222, 228);
+    border-radius: 6px;
+    margin-block-end: 8px;
+
+  }
+  
+  .task__header {
+    display: flex;
+    align-items: center;
+    
+    margin-block-end: 4px;
+    font-size: 12px;
+    color: rgb(101, 109, 118);
+  }
+  
+  .task__icon {
+    margin-inline-end: 4px;
+  }
+
+  .task__content {
+    color: rgb(31, 35, 40);
+    font-size: 14px;
+  }
+
+  .task__dropzone {
+    background-color: rgb(0, 95, 204);
+  }
+
+  .task__dropzone.dragover {
+    background: red;
+  }
+
+  /* .task:hover + .task__dropzone {
+    display: block;
+  } */

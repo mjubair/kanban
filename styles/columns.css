@@ -1,0 +1,125 @@
+/* margin-right: 8px;
+    width: 350px;
+    min-width: 350px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: hidden;
+    border-radius: 6px;
+    background-color: rgb(246, 248, 250);
+    transition: transform 75ms ease 0s;
+    border: 1px solid rgb(216, 222, 228); */
+
+    * {
+        box-sizing: border-box;
+      }
+      
+      body {
+        height: 100vh;
+        font-family: sans-serif;
+      }
+      
+      .lane {
+          min-height: 100%;
+          width: 350px;
+        min-width: 350px;
+        border-radius: 6px;
+            background-color: rgb(246, 248, 250);
+      
+        border: 1px solid rgb(216, 222, 228);
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .lane__tasks {
+        flex: 1;
+      }
+      
+      .lane__head {
+        padding-block: 8px 16px;
+        padding-inline: 16px;
+        
+      }
+      .lane__header {
+        display: flex;
+        align-items: center;
+        margin-block-end: 4px;
+      }
+      
+      .lane__title {
+        font-size: 16px;
+        font-weight: 600;
+      }
+      
+      .lane__tasks-count {
+            display: inline-block;
+            padding: 2px 5px;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1;
+            border-radius: 20px;
+            background-color: rgba(175, 184, 193, 0.2);
+            color: rgb(101, 109, 118);
+            margin-right: 8px;
+            margin-top: 4px;
+            margin-bottom: 4px;
+      }
+      
+      .lane__img {
+        background-color: rgb(251, 239, 255);
+          border-color: rgb(130, 80, 223);
+          border-width: 2px;
+          border-style: solid;
+          width: 16px;
+          height: 16px;
+          border-radius: 8px;
+          flex-shrink: 0;
+          margin-right: 8px;
+          margin-top: -4px;
+      }
+      
+      .lane__add-tasks {
+        padding-block: 8px;
+      }
+      
+      .lane__add-tasks button {
+        border: none;
+        background-color: unset;
+        color: rgb(101, 109, 118);
+      }
+      
+      .lane__add-tasks span {
+        padding-inline-end: 8px;
+      }
+      
+      .lane__tasks {
+        padding-inline: 16px;
+      }
+      
+      .lane__add-tasks {
+        padding-inline: 16px;
+        cursor: pointer;
+      }
+      
+      .lane__add-tasks:hover {
+        background-color: rgba(208, 215, 222, 0.32);
+      }
+
+      .lane__subtitle {
+        color: rgb(101, 109, 118);
+      }
+
+      .lane__last {
+        width: 170px;
+        min-width: 170px;
+        background: none;
+        border: none;
+      }
+
+      .lane__last button {
+        width: 40px;
+        height: 40px;
+        border-radius: 6px;
+        background-color: rgb(246, 248, 250);
+        box-shadow: rgba(31, 35, 40, 0.04) 0px 1px 0px, rgba(255, 255, 255, 0.25) 0px 1px 0px inset;
+        border: 1px solid rgba(31,35,40,0.15);
+      }

@@ -1,11 +1,16 @@
-import sampleData from './data/data.js';
+import sampleData from "./data/data.js";
 
 class App {
   constructor(rootSelector) {
     this.root = document.querySelector(rootSelector);
-    this.data = localStorage.getItem('data')
-      ? JSON.parse(localStorage.getItem('data'))
+    this.data = localStorage.getItem("data")
+      ? JSON.parse(localStorage.getItem("data"))
       : sampleData;
+    this.render();
+  }
+
+  setToLocalStorage(key, value) {
+    localStorage.setItem(key, value);
     this.render();
   }
 
@@ -23,7 +28,7 @@ class App {
     </div>
         `;
       })
-      .join('');
+      .join("");
 
     // tasks += `<div class="task task__dropzone" data-task-id=${items.length}></div>`;
     return tasks;
@@ -53,11 +58,11 @@ class App {
 </div>
         `;
       })
-      .join('');
+      .join("");
 
     const lastCol = `
   <div class="lane lane__last">
-  <button data-component="IconButton" type="button" aria-label="Add a new column to the board" data-testid="add-new-column-button" data-size="large" data-no-visuals="true" class="types__StyledButton-sc-ws60qy-0 iTETFQ"><svg aria-hidden="true" focusable="false" role="img" class="octicon octicon-plus" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M7.75 2a.75.75 0 0 1 .75.75V7h4.25a.75.75 0 0 1 0 1.5H8.5v4.25a.75.75 0 0 1-1.5 0V8.5H2.75a.75.75 0 0 1 0-1.5H7V2.75A.75.75 0 0 1 7.75 2Z"></path></svg></button>
+  <button id="add_board_btn" data-component="IconButton" type="button" aria-label="Add a new column to the board" data-testid="add-new-column-button" data-size="large" data-no-visuals="true" class="types__StyledButton-sc-ws60qy-0 iTETFQ"><svg aria-hidden="true" focusable="false" role="img" class="octicon octicon-plus" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M7.75 2a.75.75 0 0 1 .75.75V7h4.25a.75.75 0 0 1 0 1.5H8.5v4.25a.75.75 0 0 1-1.5 0V8.5H2.75a.75.75 0 0 1 0-1.5H7V2.75A.75.75 0 0 1 7.75 2Z"></path></svg></button>
   </div>
   `;
 
@@ -69,7 +74,7 @@ class App {
   moveTask(taskId, originColId, destinationColId) {
     const task = this.findAndRemoveTask(taskId, originColId);
     this.data.find((column) => column.id == destinationColId).tasks.push(task);
-    localStorage.setItem('data', JSON.stringify(this.data));
+    this.setToLocalStorage("data", JSON.stringify(this.data));
   }
 
   findAndRemoveTask(taskId, columnId) {
@@ -83,18 +88,16 @@ class App {
   }
 
   addTask(e) {
-    const task = prompt('Enter task name');
+    const task = prompt("Enter task name");
     const colId = e.currentTarget.dataset.colId;
     const newTask = {
-      id: new Date().getTime(),
+      id: Date.now(),
       name: task,
-      description: 'New Task Description',
+      description: "New Task Description",
     };
 
     this.data[colId - 1].tasks.push(newTask);
-    localStorage.setItem('data', JSON.stringify(this.data));
-
-    this.render();
+    this.setToLocalStorage("data", JSON.stringify(this.data));
   }
 
   render() {
@@ -103,38 +106,53 @@ class App {
   }
 
   addEventListeners() {
-    this.root.querySelectorAll('.lane__add-tasks').forEach((el) => {
-      el.addEventListener('click', (e) => this.addTask(e));
+    this.root.querySelectorAll(".lane__add-tasks").forEach((el) => {
+      el.addEventListener("click", (e) => this.addTask(e));
     });
 
-    this.root.querySelectorAll('.task').forEach((el) => {
+    // TODO: Change this
+    document.getElementById("add_board_btn").addEventListener("click", (e) => {
+      // Add a new board
+      const boardName = prompt("Enter the name for new board");
+      const description = prompt("Enter the description for new board");
+      const nextBoardId = this.data.length + 1;
+      const newBoardData = {
+        description,
+        name: boardName,
+        id: nextBoardId,
+        tasks: [],
+      };
+      this.data.push(newBoardData);
+      this.setToLocalStorage("data", JSON.stringify(this.data));
+    });
+
+    this.root.querySelectorAll(".task").forEach((el) => {
       el.draggable = true;
-      el.addEventListener('dragstart', (e) => {
+      el.addEventListener("dragstart", (e) => {
         // get the closest parent with the class lane and get the colId from dataset
-        const columnId = e.target.closest('.lane').dataset.colId;
+        const columnId = e.target.closest(".lane").dataset.colId;
         // send the taskId and columnId to the drop event
-        e.dataTransfer.setData('taskId', e.target.dataset.taskId);
+        e.dataTransfer.setData("taskId", e.target.dataset.taskId);
 
-        e.dataTransfer.setData('colId', columnId);
+        e.dataTransfer.setData("colId", columnId);
       });
     });
 
-    this.root.querySelectorAll('.lane').forEach((el) => {
-      el.addEventListener('dragover', (e) => {
+    this.root.querySelectorAll(".lane").forEach((el) => {
+      el.addEventListener("dragover", (e) => {
         e.preventDefault();
       });
 
-      el.addEventListener('drop', (e) => {
+      el.addEventListener("drop", (e) => {
         e.preventDefault();
-        const taskId = e.dataTransfer.getData('taskId');
-        const originColId = e.dataTransfer.getData('colId');
+        const taskId = e.dataTransfer.getData("taskId");
+        const originColId = e.dataTransfer.getData("colId");
         const destinationColId = e.currentTarget.dataset.colId;
 
         this.moveTask(taskId, originColId, destinationColId);
-        this.render();
       });
     });
   }
 }
 
-new App('#app');
+new App("#app");

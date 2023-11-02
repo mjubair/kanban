@@ -5,7 +5,7 @@
       border: 1px solid rgb(216, 222, 228);
     border-radius: 6px;
     margin-block-end: 8px;
-
+    background-color: white;
   }
   
   .task__header {
@@ -30,8 +30,19 @@
     background-color: rgb(0, 95, 204);
   }
 
+  .task__dragging {
+    opacity: 0.9;
+    transform: rotate(3deg);
+  }
+
   .task__dropzone.dragover {
     background: red;
+  }
+
+  .placeholder {
+    background-color: rgb(180 180 180 / 23%);
+    border-radius: 6px;
+    margin-block-end: 8px;
   }
 
   /* .task:hover + .task__dropzone {

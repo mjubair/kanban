@@ -71,10 +71,20 @@ class App {
     return columns;
   }
 
-  moveTask(taskId, originColId, destinationColId) {
+  moveTask(taskId, newIndex, originColId, destinationColId) {
     const task = this.findAndRemoveTask(taskId, originColId);
-    this.data.find((column) => column.id == destinationColId).tasks.push(task);
+    const column = this.data.find((column) => column.id == destinationColId)
+    if(newIndex !== -1) {
+      column.tasks.splice(newIndex, 0, task);
+    } else  {
+      column.tasks.push(task);
+    }
+    column.tasks.map((task, index) => {
+      task.order = index;
+    })
+
     this.setToLocalStorage("data", JSON.stringify(this.data));
+
   }
 
   findAndRemoveTask(taskId, columnId) {
@@ -82,8 +92,7 @@ class App {
     const task = column.tasks.find((task) => {
       return task.id == parseInt(taskId);
     });
-    column.tasks = column.tasks.filter((task) => task.id != taskId);
-    // localStorage.setItem('data', JSON.stringify(this.data));
+    column.tasks = column.tasks.filter((task) => task.id != taskId)
     return task;
   }
 
@@ -100,12 +109,40 @@ class App {
     this.setToLocalStorage("data", JSON.stringify(this.data));
   }
 
+  getTheClosestElement(lane, yAxis) {
+    const tasks = lane.querySelectorAll(".task:not(.task__is-dragging)");
+    let closestElement = null;
+    let closestDistance = Number.NEGATIVE_INFINITY;
+    
+    tasks.forEach((task) => {
+      const rect = task.getBoundingClientRect();
+      const distance = yAxis - rect.top;
+      if (distance < 0 && distance > closestDistance) {
+        closestDistance = distance;
+        closestElement = task;
+      }
+    });
+    return closestElement
+  }
+
   render() {
     this.root.innerHTML = this.renderColumns();
     this.addEventListeners();
   }
 
+  updateTaskOrder(taskId, newIndex, newColumn) {
+    const task = this.data.tasks.find(task => task.id === taskId);
+  
+    if (task) {
+      this.data.tasks = this.state.tasks.filter(task => task.id !== taskId);
+      this.state[newColumn].splice(newIndex, 0, task);
+    }
+  }
+
   addEventListeners() {
+
+    let draggedElementSize = { width: 0, height: 0 };
+
     this.root.querySelectorAll(".lane__add-tasks").forEach((el) => {
       el.addEventListener("click", (e) => this.addTask(e));
     });
@@ -127,20 +164,96 @@ class App {
     });
 
     this.root.querySelectorAll(".task").forEach((el) => {
-      el.draggable = true;
+      let wrapper;
+      
       el.addEventListener("dragstart", (e) => {
-        // get the closest parent with the class lane and get the colId from dataset
-        const columnId = e.target.closest(".lane").dataset.colId;
-        // send the taskId and columnId to the drop event
-        e.dataTransfer.setData("taskId", e.target.dataset.taskId);
+        e.dataTransfer.effectAllowed = "move";
+        el.classList.add("task__is-dragging");
+        
+        const clone = el.cloneNode(true);
+        wrapper = document.createElement('div');
+        wrapper.appendChild(clone);
+        wrapper.firstChild.classList.add("task__dragging");
+        wrapper.style.position = 'fixed';
+        wrapper.style.left = '-10000px';
+        wrapper.style.top = '-10000px';
+        wrapper.style.width = el.offsetWidth + "px";
+        
+        document.body.appendChild(wrapper);
 
+        const rect = el.getBoundingClientRect();
+        const offsetX = e.clientX - rect.left;
+        const offsetY = e.clientY - rect.top;
+
+        e.dataTransfer.setDragImage(wrapper, offsetX, offsetY);
+
+        const columnId = e.target.closest(".lane").dataset.colId;
+        e.dataTransfer.setData("taskId", e.target.dataset.taskId);
         e.dataTransfer.setData("colId", columnId);
+
+        draggedElementSize.width = e.target.offsetWidth + "px";
+        draggedElementSize.height = e.target.offsetHeight + "px";
+
+        setTimeout(() => {
+          el.style.opacity = 0.5;
+        }, 0);
+      });
+
+      el.addEventListener("dragenter", (e) => {
+        e.preventDefault();
+
+      })
+
+      el.addEventListener("dragleave", (e) => {
+        e.preventDefault();
+
+        document.querySelector('.task__is-dragging').remove();
+
+      })
+
+      el.addEventListener("dragend", (e) => {
+        el.classList.remove("task__dragging");
+        if(wrapper) {
+          document.body.removeChild(wrapper);
+          wrapper = null;
+        }
       });
     });
 
     this.root.querySelectorAll(".lane").forEach((el) => {
+      let placeholder;
+      let closestElement;
+
+      el.addEventListener("dragenter", (e) => {
+        e.preventDefault();
+      });
+
       el.addEventListener("dragover", (e) => {
         e.preventDefault();
+        
+        closestElement = this.getTheClosestElement(el, e.clientY)
+
+        if (!placeholder) {
+          placeholder = document.createElement('div');
+          placeholder.classList.add('placeholder');
+          placeholder.style.height = draggedElementSize.height; // Set the height to match the dragged element
+          placeholder.style.width = draggedElementSize.width; // Set the height to match the dragged element
+          placeholder.style.marginBottom = `4px`;
+        }
+
+        if (closestElement) {
+          closestElement.insertAdjacentElement('beforebegin', placeholder);
+        } else {
+          el.querySelector('.lane__tasks').append(placeholder);
+        }
+      });
+
+      el.addEventListener("dragleave", (e) => {
+        e.preventDefault();
+        if (placeholder) {
+          placeholder.remove();
+          placeholder = null;
+        }
       });
 
       el.addEventListener("drop", (e) => {
@@ -149,9 +262,14 @@ class App {
         const originColId = e.dataTransfer.getData("colId");
         const destinationColId = e.currentTarget.dataset.colId;
 
-        if (originColId === destinationColId) return;
+        if (placeholder ) {
+          placeholder.remove();
+          placeholder = null;
+        }
 
-        this.moveTask(taskId, originColId, destinationColId);
+        const newIndex = Array.from(e.currentTarget.querySelectorAll('.task')).indexOf(closestElement);
+
+        this.moveTask(taskId, newIndex, originColId, destinationColId);
       });
     });
   }

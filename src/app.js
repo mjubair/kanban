@@ -207,7 +207,9 @@ class App {
       el.addEventListener("dragleave", (e) => {
         e.preventDefault();
 
-        document.querySelector('.task__is-dragging').remove();
+        if(document.querySelector('.task__is-dragging')) {
+          document.querySelector('.task__is-dragging').remove();
+        }
 
       })
 

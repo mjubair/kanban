@@ -14,6 +14,53 @@ class App {
     this.render();
   }
 
+  renderColumnSettings() {
+    return `<div class="dialog__column">
+    <div class="dialog__column--header">
+      <div class="dialog__column-title">
+        Title
+      </div>
+      <button aria-label="Close" class="dialog__column--close ButtonBase-sc-bqtwic-0 Button-sc-ybpnzh-0 Dialog__DialogCloseButton-sc-uaxjsn-7 dsMyGk gkMOfg lkgsOL"><svg aria-hidden="true" focusable="false" role="img" class="Octicon-sc-9kayk9-0" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;">
+          <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"></path>
+        </svg></button>
+    </div>
+    <form  class="dialog__column--form">
+      <div class="dialog__column--body">
+        <div class="form-group">
+          <label for="column-title" class="form-label">Name</label>
+           <input type="text" name="title" id="column-title" class="form-input">
+        </div>
+        <div class="form-group  radio">
+          <label class="form-label">Colors</label>
+          <div class="horizontal">
+          ${this.data.colors.map((color, index) => {
+            return `
+            <label for="column-colors" class="form-label hidden">Name</label>
+           <input ${index == 0 && 'checked'} type="radio" value="${color}" name="column-color" id="column-colors" data-radio-id=${color} class="form-input" style="background-color: ${color+80};">
+           <style>
+            #column-colors[data-radio-id="${color}"]:checked {
+              outline-color: ${color};
+            }
+           </style>
+           `
+          }).join("")}
+         
+        </div>
+          </div>
+         <div class="form-group">
+          <label for="column-description" class="form-label">Description</label>
+           <textarea  name="description" id="column-description" class="form-input"></textarea>
+        </div>
+        
+      </div>
+      <div class="dialog__column--footer">
+        <button class="btn__secondary" id="form-close-column" type="button"  formmethod="dialog">Cancel</button>
+        <button class="btn__primary" type="submit">Submit</button>
+      </div>
+    </form>
+  </div>`
+  }
+
   renderItems(items) {
     let tasks = items
       .sort((a, b) => a.order - b.order)
@@ -35,13 +82,13 @@ class App {
   }
 
   renderColumns() {
-    let columns = this.data
+    let columns = this.data.columns
       .map((column) => {
         return `
             <div class="lane" data-col-id=${column.id}>
   <div class="lane__head">
     <div class="lane__header">
-    <div class="lane__img">
+    <div class="lane__img" style="border-color: ${column.color}; background-color: ${column.color}+90;">
       
     </div>
     <div class="lane__title">
@@ -73,7 +120,7 @@ class App {
 
   moveTask(taskId, newIndex, originColId, destinationColId) {
     const task = this.findAndRemoveTask(taskId, originColId);
-    const column = this.data.find((column) => column.id == destinationColId)
+    const column = this.data.columns.find((column) => column.id == destinationColId)
     if(newIndex !== -1) {
       column.tasks.splice(newIndex, 0, task);
     } else  {
@@ -88,7 +135,7 @@ class App {
   }
 
   findAndRemoveTask(taskId, columnId) {
-    const column = this.data.find((column) => column.id == columnId);
+    const column = this.data.columns.find((column) => column.id == columnId);
     const task = column.tasks.find((task) => {
       return task.id == parseInt(taskId);
     });
@@ -105,7 +152,7 @@ class App {
       description: "New Task Description",
     };
 
-    this.data[colId - 1].tasks.push(newTask);
+    this.data.columns[colId - 1].tasks.push(newTask);
     this.setToLocalStorage("data", JSON.stringify(this.data));
   }
 
@@ -130,14 +177,14 @@ class App {
     this.addEventListeners();
   }
 
-  updateTaskOrder(taskId, newIndex, newColumn) {
-    const task = this.data.tasks.find(task => task.id === taskId);
+  // updateTaskOrder(taskId, newIndex, newColumn) {
+  //   const task = this.data.tasks.find(task => task.id === taskId);
   
-    if (task) {
-      this.data.tasks = this.state.tasks.filter(task => task.id !== taskId);
-      this.state[newColumn].splice(newIndex, 0, task);
-    }
-  }
+  //   if (task) {
+  //     this.data.tasks = this.state.tasks.filter(task => task.id !== taskId);
+  //     this.state[newColumn].splice(newIndex, 0, task);
+  //   }
+  // }
 
   addEventListeners() {
 
@@ -149,19 +196,54 @@ class App {
 
     // TODO: Change this
     document.getElementById("add_board_btn").addEventListener("click", (e) => {
+
+      const dialog = document.createElement('dialog');
+      dialog.innerHTML = this.renderColumnSettings();
+      document.body.appendChild(dialog);
+      dialog.querySelector('.dialog__column--close').style.cursor = 'pointer';
+      dialog.querySelector('.dialog__column--close').addEventListener('click', () => {
+        dialog.close();
+      });
+
+      dialog.addEventListener('close', () => {
+        dialog.close();
+      });
+
+      document.querySelector('#form-close-column').addEventListener('click', () => {
+        dialog.close();
+      });
+
+      document.querySelector('.dialog__column--form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const form = document.querySelector('.dialog__column--form');
+        const formData = new FormData(form);
+        const nextBoardId = this.data.columns.length + 1;
+        console.log(formData.get('column-color'));
+        const newBoardData = {
+          description: formData.get('description'),
+          name: formData.get('title'),
+          id: nextBoardId,
+          color: formData.get('column-color'),
+          tasks: [],
+        };
+        this.data.columns.push(newBoardData);
+        this.setToLocalStorage("data", JSON.stringify(this.data));
+        form.reset();
+        dialog.close();
+      });
+      //   const boardName = prompt("Enter the name for new board");
+      // const description = prompt("Enter the description for new board");
+      
+      
+      dialog.showModal();
+
       // Add a new board
-      const boardName = prompt("Enter the name for new board");
-      const description = prompt("Enter the description for new board");
-      const nextBoardId = this.data.length + 1;
-      const newBoardData = {
-        description,
-        name: boardName,
-        id: nextBoardId,
-        tasks: [],
-      };
-      this.data.push(newBoardData);
-      this.setToLocalStorage("data", JSON.stringify(this.data));
+
+      
+
     });
+
+    
 
     this.root.querySelectorAll(".task").forEach((el) => {
       let wrapper;
@@ -220,6 +302,8 @@ class App {
           wrapper = null;
         }
       });
+
+
     });
 
     this.root.querySelectorAll(".lane").forEach((el) => {
